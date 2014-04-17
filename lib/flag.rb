@@ -1,17 +1,28 @@
 module Flag
-  Feature = Struct.new(:feature) do
-    def off!
-      Flag.features.delete(feature)
+  class Feature
+    attr_reader :feature, :active
+
+    def initialize(feature)
+      @feature = feature
+      @active = false
+    end
+
+    def active?
+      !!active
+    end
+
+    def off!;
+      @active = false
     end
 
     def on!
-      Flag.features[feature]
+      @active = true
     end
   end
 
   class << self
     def keys
-      features.keys
+      features.reject { |_, v| !v.active? }.keys
     end
 
     def features

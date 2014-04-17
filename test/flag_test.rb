@@ -1,4 +1,5 @@
 require "spec_helper"
+require "byebug"
 
 describe "Flag" do
   context "features" do
@@ -10,13 +11,16 @@ describe "Flag" do
 
     context "having one" do
       Given { Flag(:test).on! }
-      Then { Flag.keys == [:test] }
+      Then  { Flag.keys == [:test] }
     end
 
     context "turning them off" do
       Given { Flag(:test).on! }
       When  { Flag(:test).off! }
-      Then  { Flag.keys == [] }
+      When  { Flag(:test2).on! }
+
+      Then  { Flag.keys == [:test2] }
+      And   { Flag.features.keys == [:test, :test2] }
     end
 
   end
