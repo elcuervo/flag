@@ -105,6 +105,7 @@ module Flag
 
     def flush
       features.each { |_, f| f.reset }
+      @_group = nil
       self.store.call("DEL", FEATURES)
     end
 
