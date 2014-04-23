@@ -1,5 +1,7 @@
 # Flag
 
+Simple feature flags for any app
+
 ## Install
 
 ```
@@ -26,12 +28,45 @@ end
 
 ## Enable/Check feature flags
 
+### Ids
+
 ```ruby
-Flag(:new_buttons).on! # Enabled for everyone
+Flag(:new_buttons).on!  # Enabled for everyone
+Flag(:new_buttons).off! # Disabled for everyone
 
 Flag(:new_buttons).on!(1) # Enabled for id 1
 Flag(:new_buttons).on?(1) #=> true
 
 Flag(:new_buttons).on!("AnyRandomIdentification") # Use what you want as an id
 Flag(:new_buttons).on?("AnyRandomIdentification") #=> true
+```
+
+### Groups
+
+```ruby
+Flag.group[:staff] = lambda { |id| User.find(id).staff? }
+
+Flag(:new_scary_feature).on!(:staff)  # This will run a block to check if it's valid
+Flag(:new_scary_feature).on?(user.id) #=> true
+```
+
+### Percentages
+
+```ruby
+Flag(:testing).on!("33%")
+```
+
+## Info
+
+```ruby
+Flag.enabled  # Shows you an array of the currently activated features
+              #=> [:landing_page]
+
+Flag.features # All the features, even the off ones
+
+Flag.groups # The currently defined groups
+            #=> [:staff, :beta_testers]
+
+Flag(:holidays).activated # A hash with info on who has this feature active
+                          #=> {:percentage => 100, :users => ["1"], :groups => [:staff] }
 ```

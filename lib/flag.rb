@@ -25,10 +25,10 @@ module Flag
     end
 
     def groups; members_for(GROUPS).map(&:to_sym) end
-    def users; members_for(USERS) end
+    def users;  members_for(USERS) end
 
     def include?(item)
-      return percentage.to_i == item[0...-1].to_i if item.to_s.end_with?("%")
+      return percentage == item[0...-1].to_i if item.to_s.end_with?("%")
       return true if Zlib.crc32(item.to_s) % 100 < percentage
 
       Flag.store.call("SISMEMBER", subkey(item), item).to_i == 1
@@ -45,7 +45,7 @@ module Flag
     end
 
     def percentage
-      Flag.store.call("HGET", Flag::FEATURES, name).to_f
+      Flag.store.call("HGET", Flag::FEATURES, name).to_i
     end
 
     def subkey(item)
@@ -110,8 +110,8 @@ module Flag
     attr_accessor :store
 
     def flush
-      features.each { |_, f| f.reset }
       @_group = nil
+      features.each { |_, f| f.reset }
       self.store.call("DEL", FEATURES)
     end
 
