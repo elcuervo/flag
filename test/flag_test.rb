@@ -72,4 +72,11 @@ describe Flag do
     Given { Flag.store = Redic.new }
     Then  { !!Flag.store == true }
   end
+
+  context "percentage" do
+    Given { Flag(:test).on!("50%") }
+
+    Then  { Flag(:test).on?(1) == false }
+    Then  { Flag(:test).on?(2) == true }
+  end
 end

@@ -1,3 +1,5 @@
+require "zlib"
+
 module Flag
   FEATURES = "_flag:features".freeze
 
@@ -6,7 +8,11 @@ module Flag
     GROUPS = "groups".freeze
 
     def <<(item)
-      Flag.store.call("SADD", subkey(item), item)
+      if item.to_s.end_with?("%")
+        Flag.store.call("HSET", Flag::FEATURES, name, item)
+      else
+        Flag.store.call("SADD", subkey(item), item)
+      end
     end
 
     def key
@@ -19,6 +25,9 @@ module Flag
     end
 
     def include?(item)
+      value = Flag.store.call("HGET", Flag::FEATURES, name).to_f
+      return true if Zlib.crc32(item.to_s) % 100 < value
+
       Flag.store.call("SISMEMBER", subkey(item), item).to_i == 1
     end
 
