@@ -14,3 +14,7 @@ Flag(:experiment).on?(:group)
 
 Flag.group(:group) { |id| id % 2 }
 ```
+
+Keys:
+
+__flag:$feature

@@ -1,4 +1,5 @@
 require "spec_helper"
+require "redic"
 require "byebug"
 
 describe Flag do
@@ -46,9 +47,9 @@ describe Flag do
     context "testing if a user beloging to a group get stuff activated" do
       Given { Flag(:test).on!(:staff) }
 
-      Then  { Flag(:test).on?(1) == false }
-      And   { Flag(:test).on?(2) == true }
-      And   { Flag(:test).on?(3) == true }
+      Then { Flag(:test).on?(1) == false }
+      And  { Flag(:test).on?(2) == true }
+      And  { Flag(:test).on?(3) == true }
     end
   end
 
@@ -59,5 +60,15 @@ describe Flag do
       Then { Flag(:test).on?(1) == true }
       And  { Flag(:test).on?(2) == false }
     end
+  end
+
+  context "keys" do
+    Given(:feature) { Flag(:test_the_key) }
+    Then { feature.key == "_flag:test_the_key" }
+  end
+
+  context "persistance" do
+    Given { Flag.store = Redic.new }
+    Then  { !!Flag.store == true }
   end
 end

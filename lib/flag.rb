@@ -1,9 +1,12 @@
 module Flag
+  KEY = "_flag".freeze
+
   class Feature
-    attr_reader :feature, :active
+    attr_reader :feature, :active, :key
 
     def initialize(feature)
       @feature = feature
+      @key = "#{Flag::KEY}:#{feature}"
       @enabled_for = []
       @active = false
     end
@@ -43,6 +46,8 @@ module Flag
   end
 
   class << self
+    attr_accessor :store
+
     def flush
       features.each { |_, f| f.reset }
     end
