@@ -3,6 +3,7 @@ require "redic"
 require "byebug"
 
 describe Flag do
+  Given { Flag.store = Redic.new }
   after { Flag.flush }
 
   context "features" do
@@ -64,7 +65,7 @@ describe Flag do
 
   context "keys" do
     Given(:feature) { Flag(:test_the_key) }
-    Then { feature.key == "_flag:test_the_key" }
+    Then { feature.key == "_flag:features:test_the_key" }
   end
 
   context "persistance" do

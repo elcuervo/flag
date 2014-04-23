@@ -1,47 +1,93 @@
 module Flag
-  KEY = "_flag".freeze
+  FEATURES = "_flag:features".freeze
+
+  Members = Struct.new(:name) do
+    USERS = "users".freeze
+    GROUPS = "groups".freeze
+
+    def <<(item)
+      Flag.store.call("SADD", subkey(item), item)
+    end
+
+    def key
+      "#{Flag::FEATURES}:#{name}"
+    end
+
+    def groups
+      list = Flag.store.call("SMEMBERS", "#{key}:#{GROUPS}") || []
+      list.map(&:to_sym)
+    end
+
+    def include?(item)
+      Flag.store.call("SISMEMBER", subkey(item), item).to_i == 1
+    end
+
+    def reset!
+      [USERS, GROUPS].each do |k|
+        Flag.store.call("DEL", "#{key}:#{k}")
+      end
+    end
+
+    private
+
+    def subkey(item)
+      "#{key}:#{subgroup(item)}"
+    end
+
+    def subgroup(item)
+      case item
+      when Integer, Fixnum, String then USERS
+      when Symbol then GROUPS
+      end
+    end
+  end
 
   class Feature
-    attr_reader :feature, :active, :key
+    attr_accessor :active
+    attr_reader   :name
 
-    def initialize(feature)
-      @feature = feature
-      @key = "#{Flag::KEY}:#{feature}"
-      @enabled_for = []
-      @active = false
+    def initialize(name)
+      @name = name
+      @members = Members.new(name)
+    end
+
+    def key
+      @members.key
     end
 
     def reset
-      @enabled_for = []
+      @members.reset!
     end
 
     def off?; !active? end
 
     def on?(what = false)
-      if what
-        return true if @enabled_for.include?(what)
+      return active? if !what
+      return true if @members.include?(what)
 
-        if [Integer, Fixnum, String].include?(what.class)
-          groups = @enabled_for.select { |i| i.is_a?(Symbol) }
-          groups.any? { |g| Flag.group[g].call(what) }
-        else
-          false
-        end
+      if [Integer, Fixnum, String].include?(what.class)
+        @members.groups.any? { |g| Flag.group[g].call(what) }
       else
-        !!active
+        false
       end
     end
 
     def off!
-      @active = false
+      Flag.store.call("HSET", Flag::FEATURES, name, 0)
     end
 
     def on!(what = false)
       if what
-        @enabled_for << what
+        @members << what
       else
-        @active = true
+        Flag.store.call("HSET", Flag::FEATURES, name, 100)
       end
+    end
+
+    private
+
+    def active?
+      Flag.store.call("HGET", FEATURES, name).to_i == 100
     end
   end
 
@@ -50,10 +96,11 @@ module Flag
 
     def flush
       features.each { |_, f| f.reset }
+      self.store.call("DEL", FEATURES)
     end
 
     def keys
-      features.reject { |_, v| !v.on? }.keys
+      features.select { |k, v| k if v.on? }.keys
     end
 
     def groups
@@ -66,6 +113,12 @@ module Flag
 
     def features
       @_features ||= Hash.new { |h, k| h[k] = Feature.new(k) }
+
+      self.store.call("HGETALL", FEATURES).each_slice(2) do |slice|
+        @_features[slice.first.to_sym]
+      end
+
+      @_features
     end
   end
 end
