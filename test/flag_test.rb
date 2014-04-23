@@ -86,7 +86,7 @@ describe Flag do
     Given { Flag(:test).on!(:staff) }
 
     Then { Flag(:test).actived.is_a?(Hash) }
-    And  { Flag(:test).actived[:percentage] == "50%" }
+    And  { Flag(:test).actived[:percentage] == 50 }
     And  { Flag(:test).actived[:users] == ["25", "UUID"] }
     And  { Flag(:test).actived[:groups] == [:staff] }
   end

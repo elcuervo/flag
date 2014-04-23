@@ -21,7 +21,7 @@ module Flag
     end
 
     def actived
-      { percentage: "#{percentage.to_i}%",
+      { percentage: percentage.to_i,
         users: users,
         groups: groups
       }
