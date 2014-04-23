@@ -115,7 +115,7 @@ module Flag
       self.store.call("DEL", FEATURES)
     end
 
-    def keys
+    def enabled
       features.select { |k, v| k if v.on? }.keys
     end
 

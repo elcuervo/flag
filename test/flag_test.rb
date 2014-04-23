@@ -6,13 +6,13 @@ describe Flag do
   context "features" do
 
     context "empty" do
-      Given(:features) { Flag.keys }
+      Given(:features) { Flag.enabled }
       Then { features == [] }
     end
 
     context "having one" do
       Given { Flag(:test).on! }
-      Then  { Flag.keys == [:test] }
+      Then  { Flag.enabled == [:test] }
     end
 
     context "turning them off" do
@@ -20,7 +20,7 @@ describe Flag do
       When  { Flag(:test).off! }
       When  { Flag(:test2).on! }
 
-      Then  { Flag.keys == [:test2] }
+      Then  { Flag.enabled  == [:test2] }
       And   { Flag.features.keys == [:test, :test2] }
     end
 
