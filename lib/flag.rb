@@ -4,25 +4,59 @@ module Flag
 
     def initialize(feature)
       @feature = feature
+      @enabled_for = []
       @active = false
     end
 
-    def active?
-      !!active
+    def reset
+      @enabled_for = []
     end
 
-    def off!;
+    def off?; !active? end
+
+    def on?(what = false)
+      if what
+        return true if @enabled_for.include?(what)
+
+        if [Integer, Fixnum, String].include?(what.class)
+          groups = @enabled_for.select { |i| i.is_a?(Symbol) }
+          groups.any? { |g| Flag.group[g].call(what) }
+        else
+          false
+        end
+      else
+        !!active
+      end
+    end
+
+    def off!
       @active = false
     end
 
-    def on!
-      @active = true
+    def on!(what = false)
+      if what
+        @enabled_for << what
+      else
+        @active = true
+      end
     end
   end
 
   class << self
+    def flush
+      features.each { |_, f| f.reset }
+    end
+
     def keys
-      features.reject { |_, v| !v.active? }.keys
+      features.reject { |_, v| !v.on? }.keys
+    end
+
+    def groups
+      group.keys
+    end
+
+    def group
+      @_group ||= Hash.new
     end
 
     def features
@@ -31,6 +65,4 @@ module Flag
   end
 end
 
-def Flag(feature)
-  Flag.features[feature]
-end
+def Flag(feature); Flag.features[feature] end
