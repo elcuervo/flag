@@ -21,10 +21,7 @@ module Flag
     end
 
     def actived
-      { percentage: percentage.to_i,
-        users: users,
-        groups: groups
-      }
+      { percentage: percentage.to_i, users: users, groups: groups }
     end
 
     def groups; members_for(GROUPS).map(&:to_sym) end
@@ -123,7 +120,7 @@ module Flag
     end
 
     def store; @store  ||= Redic.new end
-    def group; @_group ||= Hash.new  end
+    def group; @_group ||= Hash.new { |h, k| h[k] = lambda { |id| } } end
 
     def groups; group.keys end
 

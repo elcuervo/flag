@@ -42,6 +42,12 @@ describe Flag do
       Then { feature == true }
     end
 
+    context "trying to check for an empty group" do
+      Given { Flag(:test).on!(:bogus) }
+      When(:feature) { Flag(:test).on?(1) }
+      Then { feature == false }
+    end
+
     context "testing if a user beloging to a group get stuff activated" do
       Given { Flag(:test).on!(:staff) }
 
