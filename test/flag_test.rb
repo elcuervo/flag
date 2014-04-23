@@ -1,9 +1,6 @@
 require "spec_helper"
-require "redic"
-require "byebug"
 
 describe Flag do
-  Given { Flag.store = Redic.new }
   after { Flag.flush }
 
   context "features" do
@@ -61,6 +58,11 @@ describe Flag do
       Then { Flag(:test).on?(1) == true }
       And  { Flag(:test).on?(2) == false }
     end
+
+    context "with non numeric users" do
+      When { Flag(:test).on!("ImARandomUUID") }
+      Then { Flag(:test).on?("ImARandomUUID") == true }
+    end
   end
 
   context "keys" do
@@ -68,15 +70,24 @@ describe Flag do
     Then { feature.key == "_flag:features:test_the_key" }
   end
 
-  context "persistance" do
-    Given { Flag.store = Redic.new }
-    Then  { !!Flag.store == true }
-  end
-
   context "percentage" do
     Given { Flag(:test).on!("50%") }
 
-    Then  { Flag(:test).on?(1) == false }
-    Then  { Flag(:test).on?(2) == true }
+    Then { Flag(:test).on?(1) == false }
+    And  { Flag(:test).on?(2) == true }
+    And  { Flag(:test).on?("49%") == false }
+    And  { Flag(:test).on?("50%") == true }
+  end
+
+  context "get feature info" do
+    Given { Flag(:test).on!("50%") }
+    Given { Flag(:test).on!("25") }
+    Given { Flag(:test).on!("UUID") }
+    Given { Flag(:test).on!(:staff) }
+
+    Then { Flag(:test).actived.is_a?(Hash) }
+    And  { Flag(:test).actived[:percentage] == "50%" }
+    And  { Flag(:test).actived[:users] == ["25", "UUID"] }
+    And  { Flag(:test).actived[:groups] == [:staff] }
   end
 end

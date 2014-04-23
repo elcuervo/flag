@@ -12,9 +12,5 @@ Flag(:experiment).on!(:group)
 Flag(:experiment).on?(user.id)
 Flag(:experiment).on?(:group)
 
-Flag.group(:group) { |id| id % 2 }
+Flag.group[:group] = lambda { |id| id % 2 }
 ```
-
-Keys:
-
-__flag:$feature
