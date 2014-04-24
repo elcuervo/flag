@@ -26,6 +26,17 @@ else
 end
 ```
 
+If you enable (`on!`) with `Integer`, `Fixnum` or `String` they will be treated
+as ids of your application, in the other hand if you use `Symbol` it will be
+treated as a `Group`.
+
+```ruby
+Flag(:something).on!(1)
+Flag(:something).on!("uuid")
+
+Flag(:something).on!(:group)
+```
+
 ## Enable/Check feature flags
 
 ### Ids
