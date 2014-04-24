@@ -1,4 +1,4 @@
-``ruby
+```ruby
 if Flag(:experiment).on?
 end
 
@@ -12,5 +12,5 @@ Flag(:experiment).on!(:group)
 Flag(:experiment).on?(user.id)
 Flag(:experiment).on?(:group)
 
-Flag.group[:group] = lambda { |id| id % 2 }
+Flag.group[:group] = lambda { |id| id % 2 == 0 }
 ```
