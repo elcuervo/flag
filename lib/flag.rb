@@ -127,9 +127,7 @@ module Flag
     def features
       @_features ||= Hash.new { |h, k| h[k] = Feature.new(k) }
 
-      self.store.call("HGETALL", FEATURES).each_slice(2) do |slice|
-        @_features[slice.first.to_sym]
-      end
+      self.store.call("HKEYS", FEATURES).each { |k| @_features[k.to_sym] }
 
       @_features
     end

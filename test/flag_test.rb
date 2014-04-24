@@ -93,7 +93,9 @@ describe Flag do
 
     Then { Flag(:test).actived.is_a?(Hash) }
     And  { Flag(:test).actived[:percentage] == 50 }
-    And  { Flag(:test).actived[:users] == ["25", "UUID"] }
+    And  { Flag(:test).actived[:users].size == 2 }
+    And  { Flag(:test).actived[:users].include?("25") }
+    And  { Flag(:test).actived[:users].include?("UUID") }
     And  { Flag(:test).actived[:groups] == [:staff] }
   end
 end
