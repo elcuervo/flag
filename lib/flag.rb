@@ -20,7 +20,7 @@ module Flag
       "#{Flag::FEATURES}:#{name}"
     end
 
-    def actived
+    def activated
       { percentage: percentage.to_i, users: users, groups: groups }
     end
 
@@ -69,9 +69,9 @@ module Flag
       @members = Members.new(name)
     end
 
-    def reset;   @members.reset   end
-    def key;     @members.key     end
-    def actived; @members.actived end
+    def reset;     @members.reset     end
+    def key;       @members.key       end
+    def activated; @members.activated end
 
     def off?; !active? end
 

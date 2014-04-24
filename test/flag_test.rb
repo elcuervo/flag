@@ -36,7 +36,7 @@ describe Flag do
       Then { groups == [:staff] }
     end
 
-    context "testing if feature is actived for a group" do
+    context "testing if feature is activated for a group" do
       Given { Flag(:test).on!(:staff) }
       When(:feature) { Flag(:test).on?(:staff) }
       Then { feature == true }
@@ -91,11 +91,11 @@ describe Flag do
     Given { Flag(:test).on!("UUID") }
     Given { Flag(:test).on!(:staff) }
 
-    Then { Flag(:test).actived.is_a?(Hash) }
-    And  { Flag(:test).actived[:percentage] == 50 }
-    And  { Flag(:test).actived[:users].size == 2 }
-    And  { Flag(:test).actived[:users].include?("25") }
-    And  { Flag(:test).actived[:users].include?("UUID") }
-    And  { Flag(:test).actived[:groups] == [:staff] }
+    Then { Flag(:test).activated.is_a?(Hash) }
+    And  { Flag(:test).activated[:percentage] == 50 }
+    And  { Flag(:test).activated[:users].size == 2 }
+    And  { Flag(:test).activated[:users].include?("25") }
+    And  { Flag(:test).activated[:users].include?("UUID") }
+    And  { Flag(:test).activated[:groups] == [:staff] }
   end
 end
