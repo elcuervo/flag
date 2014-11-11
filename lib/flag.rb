@@ -21,7 +21,7 @@ module Flag
     end
 
     def activated
-      { percentage: percentage.to_i, users: users, groups: groups }
+      { percentage: percentage, users: users, groups: groups }
     end
 
     def groups; members_for(GROUPS).map(&:to_sym) end
