@@ -28,7 +28,7 @@ module Flag
     def users;  members_for(USERS) end
 
     def include?(item)
-      return percentage == item[0...-1].to_i if item.to_s.end_with?("%")
+      return percentage == item.to_i if item.to_s.end_with?("%")
       return true if Zlib.crc32(item.to_s) % 100 < percentage
 
       Flag.store.call("SISMEMBER", subkey(item), item).to_i == 1
