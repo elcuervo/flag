@@ -91,12 +91,8 @@ module Flag
       @members << "0%"
     end
 
-    def on!(what = false)
-      if what
-        @members << what
-      else
-        @members << "100%"
-      end
+    def on!(what = "100%")
+      @members << what
     end
 
     private
