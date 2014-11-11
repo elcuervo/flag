@@ -88,14 +88,14 @@ module Flag
     end
 
     def off!
-      Flag.store.call("HSET", Flag::FEATURES, name, 0)
+      @members << "0%"
     end
 
     def on!(what = false)
       if what
         @members << what
       else
-        Flag.store.call("HSET", Flag::FEATURES, name, 100)
+        @members << "100%"
       end
     end
 
