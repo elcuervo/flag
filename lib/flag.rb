@@ -116,7 +116,7 @@ module Flag
     end
 
     def enabled
-      features.select { |k, v| k if v.on? }.keys
+      features.select { |k, v| v.on? }.keys
     end
 
     def store; @store  ||= Redic.new end
