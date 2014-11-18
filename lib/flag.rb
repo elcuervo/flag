@@ -38,14 +38,14 @@ module Flag
       [USERS, GROUPS].each { |k| Flag.store.call("DEL", "#{key}:#{k}") }
     end
 
+    def percentage
+      Flag.store.call("HGET", Flag::FEATURES, name).to_i
+    end
+
     private
 
     def members_for(type)
       Flag.store.call("SMEMBERS", "#{key}:#{type}") || []
-    end
-
-    def percentage
-      Flag.store.call("HGET", Flag::FEATURES, name).to_i
     end
 
     def subkey(item)
@@ -88,21 +88,17 @@ module Flag
     end
 
     def off!
-      Flag.store.call("HSET", Flag::FEATURES, name, 0)
+      @members << "0%"
     end
 
-    def on!(what = false)
-      if what
-        @members << what
-      else
-        Flag.store.call("HSET", Flag::FEATURES, name, 100)
-      end
+    def on!(what = "100%")
+      @members << what
     end
 
     private
 
     def active?
-      Flag.store.call("HGET", FEATURES, name).to_i == 100
+      @members.percentage == 100
     end
   end
 
