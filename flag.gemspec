@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name              = "flag"
-  s.version           = "0.0.1"
+  s.version           = "0.0.2"
   s.summary           = "Simple feature flags"
   s.description       = "Feature flags for the humans and the coders"
   s.authors           = ["elcuervo"]
