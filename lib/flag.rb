@@ -24,8 +24,13 @@ module Flag
       { percentage: percentage, users: users, groups: groups }
     end
 
-    def groups; members_for(GROUPS).map(&:to_sym) end
-    def users;  members_for(USERS) end
+    def groups
+      members_for(GROUPS).map(&:to_sym)
+    end
+
+    def users
+      members_for(USERS)
+    end
 
     def include?(item)
       return percentage == item.to_i if item.to_s.end_with?("%")
@@ -55,7 +60,7 @@ module Flag
     def subgroup(item)
       case item
       when Integer, Fixnum, String then USERS
-      when Symbol then GROUPS
+      when Symbol                  then GROUPS
       end
     end
   end
@@ -69,11 +74,21 @@ module Flag
       @members = Members.new(name)
     end
 
-    def reset;     @members.reset     end
-    def key;       @members.key       end
-    def activated; @members.activated end
+    def reset
+      @members.reset
+    end
 
-    def off?; !active? end
+    def key
+      @members.key
+    end
+
+    def activated
+      @members.activated
+    end
+
+    def off?
+      !active?
+    end
 
     def on?(what = false)
       return active? if !what
@@ -115,10 +130,19 @@ module Flag
       features.select { |k, v| v.on? }.keys
     end
 
-    def store; @store  ||= Redic.new end
-    def group; @_group ||= Hash.new { |h, k| h[k] = lambda { |id| } } end
+    def store
+      @store ||= Redic.new
+    end
 
-    def groups; group.keys end
+    def group
+      @_group ||= Hash.new do |h, k|
+        h[k] = lambda { |id| }
+      end
+    end
+
+    def groups
+      group.keys
+    end
 
     def features
       @_features ||= Hash.new { |h, k| h[k] = Feature.new(k) }
@@ -130,4 +154,6 @@ module Flag
   end
 end
 
-def Flag(feature); Flag.features[feature] end
+def Flag(feature)
+  Flag.features[feature]
+end
