@@ -4,15 +4,19 @@ require "redic"
 module Flag
   FEATURES = "_flag:features".freeze
 
+  RedisGoneError = StandardError
+
   Members = Struct.new(:name) do
     USERS  = "users".freeze
     GROUPS = "groups".freeze
 
     def <<(item)
-      if item.to_s.end_with?("%")
-        Flag.store.call("HSET", Flag::FEATURES, name, item[0...-1])
-      else
-        Flag.store.call("SADD", subkey(item), item)
+      Flag.execute do |store|
+        if item.to_s.end_with?("%")
+          store.call("HSET", Flag::FEATURES, name, item[0...-1])
+        else
+          store.call("SADD", subkey(item), item)
+        end
       end
     end
 
@@ -24,28 +28,39 @@ module Flag
       { percentage: percentage, users: users, groups: groups }
     end
 
-    def groups; members_for(GROUPS).map(&:to_sym) end
-    def users;  members_for(USERS) end
+    def groups
+      members_for(GROUPS).map(&:to_sym)
+    end
+
+    def users
+      members_for(USERS)
+    end
 
     def include?(item)
       return percentage == item.to_i if item.to_s.end_with?("%")
       return true if Zlib.crc32(item.to_s) % 100 < percentage
 
-      Flag.store.call("SISMEMBER", subkey(item), item).to_i == 1
+      Flag.execute do |store|
+        store.call("SISMEMBER", subkey(item), item).to_i == 1
+      end
     end
 
     def reset
-      [USERS, GROUPS].each { |k| Flag.store.call("DEL", "#{key}:#{k}") }
+      [USERS, GROUPS].each do |k|
+        Flag.execute { |store| store.call("DEL", "#{key}:#{k}") }
+      end
     end
 
     def percentage
-      Flag.store.call("HGET", Flag::FEATURES, name).to_i
+      Flag.execute { |store| store.call("HGET", Flag::FEATURES, name).to_i }
     end
 
     private
 
     def members_for(type)
-      Flag.store.call("SMEMBERS", "#{key}:#{type}") || []
+      Flag.execute do |store|
+        store.call("SMEMBERS", "#{key}:#{type}") || []
+      end
     end
 
     def subkey(item)
@@ -55,7 +70,7 @@ module Flag
     def subgroup(item)
       case item
       when Integer, Fixnum, String then USERS
-      when Symbol then GROUPS
+      when Symbol                  then GROUPS
       end
     end
   end
@@ -69,11 +84,21 @@ module Flag
       @members = Members.new(name)
     end
 
-    def reset;     @members.reset     end
-    def key;       @members.key       end
-    def activated; @members.activated end
+    def reset
+      @members.reset
+    end
 
-    def off?; !active? end
+    def key
+      @members.key
+    end
+
+    def activated
+      @members.activated
+    end
+
+    def off?
+      !active?
+    end
 
     def on?(what = false)
       return active? if !what
@@ -103,31 +128,58 @@ module Flag
   end
 
   class << self
-    attr_accessor :store
+    attr_accessor :store, :quiet
 
     def flush
       @_group = nil
       features.each { |_, f| f.reset }
-      self.store.call("DEL", FEATURES)
+      self.execute { |store| store.call("DEL", FEATURES) }
     end
 
     def enabled
       features.select { |k, v| v.on? }.keys
     end
 
-    def store; @store  ||= Redic.new end
-    def group; @_group ||= Hash.new { |h, k| h[k] = lambda { |id| } } end
+    def quiet!
+      @quiet = true
+    end
 
-    def groups; group.keys end
+    def quiet?
+      @quiet == true
+    end
+
+    def execute
+      yield(store)
+    rescue Errno::ECONNREFUSED, Errno::EINVAL => e
+      raise RedisGoneError unless quiet?
+    end
+
+    def store
+      @store ||= Redic.new
+    end
+
+    def group
+      @_group ||= Hash.new do |h, k|
+        h[k] = lambda { |id| }
+      end
+    end
+
+    def groups
+      group.keys
+    end
 
     def features
       @_features ||= Hash.new { |h, k| h[k] = Feature.new(k) }
 
-      self.store.call("HKEYS", FEATURES).each { |k| @_features[k.to_sym] }
+      self.execute do |store|
+        store.call("HKEYS", FEATURES).each { |k| @_features[k.to_sym] }
+      end
 
       @_features
     end
   end
 end
 
-def Flag(feature); Flag.features[feature] end
+def Flag(feature)
+  Flag.features[feature]
+end
