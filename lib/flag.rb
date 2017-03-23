@@ -9,10 +9,12 @@ module Flag
     GROUPS = "groups".freeze
 
     def <<(item)
-      if item.to_s.end_with?("%")
-        Flag.store.call("HSET", Flag::FEATURES, name, item[0...-1])
-      else
-        Flag.store.call("SADD", subkey(item), item)
+      Flag.execute do |store|
+        if item.to_s.end_with?("%")
+          store.call("HSET", Flag::FEATURES, name, item[0...-1])
+        else
+          store.call("SADD", subkey(item), item)
+        end
       end
     end
 
@@ -36,21 +38,27 @@ module Flag
       return percentage == item.to_i if item.to_s.end_with?("%")
       return true if Zlib.crc32(item.to_s) % 100 < percentage
 
-      Flag.store.call("SISMEMBER", subkey(item), item).to_i == 1
+      Flag.execute do |store|
+        store.call("SISMEMBER", subkey(item), item).to_i == 1
+      end
     end
 
     def reset
-      [USERS, GROUPS].each { |k| Flag.store.call("DEL", "#{key}:#{k}") }
+      [USERS, GROUPS].each do |k|
+        Flag.execute { |store| store.call("DEL", "#{key}:#{k}") }
+      end
     end
 
     def percentage
-      Flag.store.call("HGET", Flag::FEATURES, name).to_i
+      Flag.execute { |store| store.call("HGET", Flag::FEATURES, name).to_i }
     end
 
     private
 
     def members_for(type)
-      Flag.store.call("SMEMBERS", "#{key}:#{type}") || []
+      Flag.execute do |store|
+        store.call("SMEMBERS", "#{key}:#{type}") || []
+      end
     end
 
     def subkey(item)
@@ -123,11 +131,21 @@ module Flag
     def flush
       @_group = nil
       features.each { |_, f| f.reset }
-      self.store.call("DEL", FEATURES)
+      self.execute { |store| store.call("DEL", FEATURES) }
     end
 
     def enabled
       features.select { |k, v| v.on? }.keys
+    end
+
+    def quiet!
+      @_quiet = true
+    end
+
+    def execute
+      yield(store)
+    rescue Errno::ECONNREFUSED, Errno::EINVAL => e
+      raise e unless @_quiet
     end
 
     def store
@@ -147,7 +165,9 @@ module Flag
     def features
       @_features ||= Hash.new { |h, k| h[k] = Feature.new(k) }
 
-      self.store.call("HKEYS", FEATURES).each { |k| @_features[k.to_sym] }
+      self.execute do |store|
+        store.call("HKEYS", FEATURES).each { |k| @_features[k.to_sym] }
+      end
 
       @_features
     end
