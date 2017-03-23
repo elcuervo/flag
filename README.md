@@ -1,4 +1,5 @@
 # Flag
+[![Build Status](https://travis-ci.org/elcuervo/flag.svg?branch=master)](https://travis-ci.org/elcuervo/flag)
 
 Simple feature flags for any app
 
