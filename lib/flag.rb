@@ -4,6 +4,8 @@ require "redic"
 module Flag
   FEATURES = "_flag:features".freeze
 
+  RedisGoneError = StandardError
+
   Members = Struct.new(:name) do
     USERS  = "users".freeze
     GROUPS = "groups".freeze
@@ -126,7 +128,7 @@ module Flag
   end
 
   class << self
-    attr_accessor :store
+    attr_accessor :store, :quiet
 
     def flush
       @_group = nil
@@ -139,13 +141,17 @@ module Flag
     end
 
     def quiet!
-      @_quiet = true
+      @quiet = true
+    end
+
+    def quiet?
+      @quiet == true
     end
 
     def execute
       yield(store)
     rescue Errno::ECONNREFUSED, Errno::EINVAL => e
-      raise e unless @_quiet
+      raise RedisGoneError unless quiet?
     end
 
     def store

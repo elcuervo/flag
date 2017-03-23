@@ -1,18 +1,32 @@
 require_relative "./spec_helper"
 
-prepare do
-  Flag.flush
-end
-
 scope "fallback" do
   setup do
     Flag.store = Redic.new("redis://localhost:6380/23")
-    Flag.quiet!
   end
 
-  test do
-    Flag(:fallback).on!
+  scope "normal mode" do
+    test "fail when Redis is gone" do
+      Flag.quiet = false
 
-    assert Flag(:fallback).on? == false
+      assert Flag.quiet? == false
+      assert_raise(Flag::RedisGoneError) do
+        Flag(:fallback).on!
+      end
+    end
+  end
+
+  scope "quiet mode" do
+    setup do
+      Flag.quiet!
+    end
+
+    test "do not fail when Redis is gone" do
+      assert Flag.quiet? == true
+
+      Flag(:fallback).on!
+
+      assert Flag(:fallback).on? == false
+    end
   end
 end
