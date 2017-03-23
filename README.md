@@ -37,6 +37,18 @@ Flag(:something).on!("uuid")
 Flag(:something).on!(:group)
 ```
 
+## Quiet mode
+
+Sometimes you don't want to have your server down when doing flag checks:
+
+```ruby
+Flag.quiet!
+# Now everything fails silently
+
+Flag.store = Redic.new("redis://localhost:5433/123")
+Flag(:quack).on!
+```
+
 ## Enable/Check feature flags
 
 ### Ids
