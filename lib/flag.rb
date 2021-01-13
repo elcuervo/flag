@@ -20,6 +20,16 @@ module Flag
       end
     end
 
+    def delete(item)
+      Flag.execute do |store|
+        if item.to_s.end_with?("%")
+          store.call("HSET", Flag::FEATURES, name, item[0...-1])
+        else
+          store.call("SREM", subkey(item), item)
+        end
+      end
+    end
+
     def key
       "#{Flag::FEATURES}:#{name}"
     end
@@ -69,8 +79,8 @@ module Flag
 
     def subgroup(item)
       case item
-      when Integer, Fixnum, String then USERS
-      when Symbol                  then GROUPS
+      when Integer, String then USERS
+      when Symbol          then GROUPS
       end
     end
   end
@@ -105,15 +115,15 @@ module Flag
       return true    if @members.include?(what)
 
       case what
-      when Integer, Fixnum, String
+      when Integer, String
         @members.groups.any? { |g| Flag.group[g].call(what) }
       else
         false
       end
     end
 
-    def off!
-      @members << "0%"
+    def off!(what = "0%")
+      @members.delete(what)
     end
 
     def on!(what = "100%")
@@ -128,7 +138,7 @@ module Flag
   end
 
   class << self
-    attr_accessor :store, :quiet
+    attr_accessor :store, :quiet, :refresh_interval
 
     def flush
       @_group = nil
@@ -160,7 +170,7 @@ module Flag
 
     def group
       @_group ||= Hash.new do |h, k|
-        h[k] = lambda { |id| }
+        h[k] = -> (id) { }
       end
     end
 
