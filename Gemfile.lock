@@ -10,9 +10,9 @@ GEM
     clap (1.0.0)
     cutest (1.2.3)
       clap
-    hiredis (0.6.1)
-    rake (12.0.0)
-    redic (1.5.0)
+    hiredis (0.6.3)
+    rake (13.0.3)
+    redic (1.5.3)
       hiredis
 
 PLATFORMS
@@ -24,4 +24,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   1.14.4
+   1.17.2
